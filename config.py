@@ -14,24 +14,13 @@ if os.path.exists(_env_path):
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 DB_PATH = os.path.join(DATA_DIR, 'exam_tool.db')
 
-SYNOPSIS_PATH = os.path.join(
-    os.environ.get('USERPROFILE', r'C:\Users\User'),
-    r'OneDrive\שולחן העבודה\איגוד\שלב א\Synopsis 2021.pdf'
-)
-DULCAN_PATH = os.path.join(
-    os.environ.get('USERPROFILE', r'C:\Users\User'),
-    r'OneDrive\שולחן העבודה\איגוד\שלב א\הערכות מומחים',
-    'Dulcans Textbook of Child and Adolescent Psychiatry עם תיקוני ברוך קושניר 050725.pdf'
-)
+# PDF paths - use data directory for deployment
+SYNOPSIS_PATH = os.environ.get('SYNOPSIS_PATH', os.path.join(DATA_DIR, 'Synopsis 2021.pdf'))
+DULCAN_PATH = os.environ.get('DULCAN_PATH', os.path.join(DATA_DIR, 'Dulcan.pdf'))
 
-PHASE1_PATH = os.path.join(
-    os.environ.get('USERPROFILE', r'C:\Users\User'),
-    'psychiatry_mapper', 'phase1_topics.json'
-)
-PHASE2_PATH = os.path.join(
-    os.environ.get('USERPROFILE', r'C:\Users\User'),
-    'psychiatry_mapper', 'phase2_mapping.json'
-)
+# JSON data paths - use data directory
+PHASE1_PATH = os.path.join(DATA_DIR, 'phase1_topics.json')
+PHASE2_PATH = os.path.join(DATA_DIR, 'phase2_mapping.json')
 
 CLAUDE_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 CLAUDE_MODEL = 'claude-sonnet-4-20250514'
