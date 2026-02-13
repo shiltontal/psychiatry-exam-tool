@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}יצירת שאלות{% endblock %}
+{% block content %}
+<h2 class="mb-4">יצירת שאלות באמצעות AI</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="/questions/generate" id="genForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">פרק</label>
+                        <select class="form-select" id="chapterSelect" onchange="filterTopics()">
+                            <option value="">-- בחר פרק --</option>
+                            {% for ch in chapters %}
+                            <option value="{{ ch.chapter_code }}">{{ ch.chapter_he }} ({{ ch.chapter_en }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">נושא</label>
+                        <select class="form-select" name="topic_id" id="topicSelect" required onchange="loadSubtopics()">
+                            <option value="">-- בחר נושא --</option>
+                            {% for t in topics %}
+                            <option value="{{ t.id }}" data-chapter="{{ t.chapter_code }}"
+                                    data-syn="{{ t.syn_conf }}" data-dul="{{ t.dul_conf }}"
+                                    data-syn-pages="{{ t.synopsis_pages or '' }}" data-dul-pages="{{ t.dulcan_pages or '' }}">
+                                {{ t.hebrew }} ({{ t.english }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="subtopicsArea" class="mb-3" style="display:none">
+                        <div class="d-flex align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0 me-3">תת-נושאים</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="toggleAllSubtopics(true)">בחר הכל</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllSubtopics(false)">נקה הכל</button>
+                        </div>
+                        <div id="subtopicsList"></div>
+                    </div>
+
+                    <div id="sourceInfo" class="mb-3" style="display:none">
+                        <div class="alert alert-info" id="sourceInfoContent"></div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">מספר שאלות</label>
+                            <select class="form-select" name="count">
+                                <option value="1">1</option>
+                                <option value="3" selected>3</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">רמת קושי</label>
+                            <select class="form-select" name="difficulty">
+                                <option value="easy">קל</option>
+                                <option value="medium" selected>בינוני</option>
+                                <option value="hard">קשה</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">מטרת השאלה</label>
+                            <select class="form-select" name="clinical_task">
+                                <option value="mixed" selected>מגוון</option>
+                                <option value="apply">יישום ידע למקרה קליני</option>
+                                <option value="discriminate">הבחנה בין אפשרויות קרובות</option>
+                                <option value="decide_uncertain">קבלת החלטות בתנאי אי-ודאות</option>
+                                <option value="prioritize">זיהוי דחיפות ותיעדוף</option>
+                                <option value="integrate">אינטגרציה בין-תחומית</option>
+                                <option value="evaluate">הערכה ביקורתית</option>
+                                <option value="adapt">שיפוט קליני מורכב</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="genBtn">
+                        <span id="genText">צור שאלות</span>
+                        <span id="genSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><strong>הנחיות</strong></div>
+            <div class="card-body small">
+                <ul>
+                    <li>בחר פרק ונושא מהסילבוס</li>
+                    <li>ניתן לבחור תת-נושאים ספציפיים למיקוד השאלות</li>
+                    <li>בחר מטרת השאלה כדי לכוון את סוג התרחיש</li>
+                    <li>ה-AI יחלץ תוכן רלוונטי מספרי הלימוד</li>
+                    <li>השאלות ייווצרו בעברית בפורמט MCQ</li>
+                    <li>השאלות נשמרות כטיוטות לעריכה ואישור</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store subtopics data
+const subtopicsData = {};
+{% for s in subtopics %}
+if (!subtopicsData[{{ s.parent_id }}]) subtopicsData[{{ s.parent_id }}] = [];
+subtopicsData[{{ s.parent_id }}].push({id: {{ s.id }}, he: {{ s.hebrew|tojson }}, en: {{ s.english|tojson }}});
+{% endfor %}
+
+function filterTopics() {
+    const ch = document.getElementById('chapterSelect').value;
+    const sel = document.getElementById('topicSelect');
+    for (const opt of sel.options) {
+        if (opt.value === '') continue;
+        opt.style.display = (!ch || opt.dataset.chapter === ch) ? '' : 'none';
+    }
+    sel.value = '';
+    document.getElementById('subtopicsArea').style.display = 'none';
+    document.getElementById('sourceInfo').style.display = 'none';
+}
+
+function loadSubtopics() {
+    const tid = parseInt(document.getElementById('topicSelect').value);
+    const opt = document.getElementById('topicSelect').selectedOptions[0];
+    const area = document.getElementById('subtopicsArea');
+    const list = document.getElementById('subtopicsList');
+
+    // Show source info
+    if (opt && opt.value) {
+        const info = document.getElementById('sourceInfo');
+        const content = document.getElementById('sourceInfoContent');
+        const synConf = opt.dataset.syn || '-';
+        const dulConf = opt.dataset.dul || '-';
+        const synPages = opt.dataset.synPages || 'לא זמין';
+        const dulPages = opt.dataset.dulPages || 'לא זמין';
+        content.innerHTML = `<strong>מקורות:</strong><br>
+            Synopsis: ${synPages} (${synConf})<br>
+            Dulcan: ${dulPages} (${dulConf})`;
+        info.style.display = '';
+    }
+
+    // Show subtopics
+    const subs = subtopicsData[tid];
+    if (subs && subs.length > 0) {
+        list.innerHTML = subs.map(s =>
+            `<div class="form-check">
+                <input class="form-check-input" type="checkbox" name="subtopic_ids" value="${s.id}" id="sub_${s.id}" checked>
+                <label class="form-check-label" for="sub_${s.id}">${s.he} <small class="text-muted">(${s.en})</small></label>
+            </div>`
+        ).join('');
+        area.style.display = '';
+    } else {
+        area.style.display = 'none';
+    }
+}
+
+function toggleAllSubtopics(checked) {
+    document.querySelectorAll('#subtopicsList input[type="checkbox"]').forEach(cb => cb.checked = checked);
+}
+
+document.getElementById('genForm').addEventListener('submit', function() {
+    document.getElementById('genBtn').disabled = true;
+    document.getElementById('genText').textContent = 'יוצר שאלות...';
+    document.getElementById('genSpinner').classList.remove('d-none');
+});
+
+// Auto-select topic from URL params
+const params = new URLSearchParams(window.location.search);
+if (params.get('topic_id')) {
+    document.getElementById('topicSelect').value = params.get('topic_id');
+    loadSubtopics();
+}
+</script>
+{% endblock %}

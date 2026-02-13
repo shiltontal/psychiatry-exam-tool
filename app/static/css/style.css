@@ -1,0 +1,68 @@
+body {
+    font-family: 'Heebo', 'David', 'Arial', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: 700;
+}
+
+.rtl-input {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Heebo', 'David', 'Arial', sans-serif;
+}
+
+.card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: #f1f3f5;
+}
+
+.table th {
+    white-space: nowrap;
+}
+
+.question-block {
+    padding: 1rem;
+    border-right: 4px solid #2F5496;
+    background: #fafbfc;
+    border-radius: 4px;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+/* Print styles */
+@media print {
+    .no-print, .navbar, .alert {
+        display: none !important;
+    }
+    .card {
+        box-shadow: none;
+        border: none;
+    }
+    .question-block {
+        page-break-inside: avoid;
+    }
+}
+
+/* Exam preview */
+.exam-preview {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.exam-preview .question-block p {
+    margin-bottom: 0.3rem;
+}
+
+/* Status badges in tables */
+.table .badge {
+    min-width: 50px;
+}

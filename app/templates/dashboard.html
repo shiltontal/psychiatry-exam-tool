@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}דשבורד - כלי יצירת שאלות{% endblock %}
+{% block content %}
+<h2 class="mb-4">דשבורד כיסוי סילבוס</h2>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <h3 class="text-primary">{{ total_q }}</h3>
+                <div class="text-muted">סה"כ שאלות</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-secondary">
+            <div class="card-body">
+                <h3 class="text-secondary">{{ draft_q }}</h3>
+                <div class="text-muted">טיוטות</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <h3 class="text-warning">{{ review_q }}</h3>
+                <div class="text-muted">בסקירה</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <h3 class="text-success">{{ approved_q }}</h3>
+                <div class="text-muted">מאושרות</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Coverage Chart -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><strong>כיסוי לפי פרק</strong></div>
+            <div class="card-body">
+                <canvas id="coverageChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><strong>פעולות מהירות</strong></div>
+            <div class="card-body">
+                <a href="/questions/generate" class="btn btn-primary btn-lg w-100 mb-2">יצירת שאלות חדשות</a>
+                <a href="/questions/?status=draft" class="btn btn-outline-secondary w-100 mb-2">סקירת טיוטות ({{ draft_q }})</a>
+                <a href="/exams/new" class="btn btn-outline-success w-100">בנית מבחן חדש</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gaps Table -->
+{% if gaps %}
+<div class="card">
+    <div class="card-header bg-danger text-white"><strong>נושאים ללא שאלות ({{ gaps|length }})</strong></div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>פרק</th>
+                    <th>נושא</th>
+                    <th>Synopsis</th>
+                    <th>Dulcan</th>
+                    <th>פעולה</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in gaps %}
+                <tr>
+                    <td>{{ g.chapter_he }}</td>
+                    <td>{{ g.hebrew }}<br><small class="text-muted">{{ g.english }}</small></td>
+                    <td><span class="badge bg-{{ 'success' if g.syn_conf == 'HIGH' else ('warning' if g.syn_conf == 'MEDIUM' else 'danger') }}">{{ g.syn_conf or '-' }}</span></td>
+                    <td><span class="badge bg-{{ 'success' if g.dul_conf == 'HIGH' else ('warning' if g.dul_conf == 'MEDIUM' else 'danger') }}">{{ g.dul_conf or '-' }}</span></td>
+                    <td><a href="/questions/generate?topic_id={{ g.id }}" class="btn btn-sm btn-primary">צור שאלות</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('coverageChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for ch in chapters %}'{{ ch.chapter_he }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'שאלות',
+            data: [{% for ch in chapters %}{{ ch.question_count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: 'rgba(47, 84, 150, 0.7)',
+        }, {
+            label: 'מאושרות',
+            data: [{% for ch in chapters %}{{ ch.approved_count or 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: { x: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

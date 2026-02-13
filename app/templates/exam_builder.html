@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}{% if exam %}{{ exam.title }}{% else %}מבחן חדש{% endif %}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{% if exam %}עריכת מבחן: {{ exam.title }}{% else %}בנית מבחן חדש{% endif %}</h2>
+
+<div class="row">
+    <!-- Exam Content (left/right in RTL) -->
+    <div class="col-md-7">
+        {% if not exam %}
+        <form method="POST" action="/exams/create" id="examForm">
+            <div class="card mb-3">
+                <div class="card-header"><strong>פרטי המבחן</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">כותרת</label>
+                        <input type="text" class="form-control" name="title" value="מבחן תרגול" required dir="rtl">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">תיאור</label>
+                        <textarea class="form-control" name="description" rows="2" dir="rtl"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><strong>שאלות נבחרות</strong></div>
+                <div class="card-body" id="selectedArea">
+                    <p class="text-muted" id="noSelection">סמן שאלות מהרשימה בצד</p>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg w-100">צור מבחן</button>
+        </form>
+
+        {% else %}
+        <!-- Existing exam - show questions -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <strong>שאלות במבחן ({{ exam_questions|length }})</strong>
+                <div>
+                    <a href="/exams/{{ exam.id }}/preview" class="btn btn-sm btn-info">תצוגה מקדימה</a>
+                    <a href="/export/exam/{{ exam.id }}/docx" class="btn btn-sm btn-success">ייצוא Word</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if exam_questions %}
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>#</th><th>נושא</th><th>שאלה</th><th>קושי</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for q in exam_questions %}
+                        <tr>
+                            <td>{{ q.position }}</td>
+                            <td><small>{{ q.topic_he|truncate(20) }}</small></td>
+                            <td>{{ q.stem_he|truncate(60) }}</td>
+                            <td><span class="badge bg-{{ 'success' if q.difficulty == 'easy' else ('warning' if q.difficulty == 'medium' else 'danger') }}">{{ q.difficulty }}</span></td>
+                            <td>
+                                <form method="POST" action="/exams/{{ exam.id }}/remove/{{ q.id }}" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger">הסר</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted text-center py-3">אין שאלות במבחן עדיין</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/exams/{{ exam.id }}/preview" class="btn btn-info flex-fill">תצוגה מקדימה</a>
+            <a href="/export/exam/{{ exam.id }}/docx" class="btn btn-success flex-fill">ייצוא Word</a>
+            <form method="POST" action="/exams/{{ exam.id }}/delete" onsubmit="return confirm('למחוק את המבחן?')">
+                <button class="btn btn-danger">מחק מבחן</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Questions -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><strong>שאלות זמינות ({{ questions|length }})</strong></div>
+            <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                {% if exam %}
+                <form method="POST" action="/exams/{{ exam.id }}/add">
+                {% endif %}
+                <table class="table table-sm table-hover mb-0">
+                    <tbody>
+                        {% for q in questions %}
+                        <tr>
+                            <td style="width:30px">
+                                <input type="checkbox" name="question_ids" value="{{ q.id }}" class="form-check-input q-checkbox">
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ q.topic_he|truncate(25) }}</small><br>
+                                {{ q.stem_he|truncate(50) }}
+                            </td>
+                            <td style="width:80px">
+                                <span class="badge bg-{{ 'success' if q.difficulty == 'easy' else ('warning' if q.difficulty == 'medium' else 'danger') }}">
+                                    {{ q.difficulty }}
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1"
+                                        onclick="showQuestion({{ q.id }})">
+                                    <small>הצג</small>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not questions %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">אין שאלות מאושרות/בסקירה זמינות</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                {% if exam and questions %}
+                <div class="p-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">הוסף נבחרות למבחן</button>
+                </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Modal -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">צפייה ועריכת שאלה</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="questionEditForm" method="POST">
+                <input type="hidden" id="modalTopicId" name="topic_id" value="">
+                <div class="modal-body" dir="rtl">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">נושא</label>
+                        <div id="modalTopic" class="text-muted"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">שאלה</label>
+                        <textarea class="form-control" id="modalStem" name="stem_he" rows="4" dir="rtl"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">א.</label>
+                            <input type="text" class="form-control" id="modalOptA" name="option_a" dir="rtl">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">ב.</label>
+                            <input type="text" class="form-control" id="modalOptB" name="option_b" dir="rtl">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">ג.</label>
+                            <input type="text" class="form-control" id="modalOptC" name="option_c" dir="rtl">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">ד.</label>
+                            <input type="text" class="form-control" id="modalOptD" name="option_d" dir="rtl">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">ה. (אופציונלי)</label>
+                            <input type="text" class="form-control" id="modalOptE" name="option_e" dir="rtl">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label">תשובה נכונה</label>
+                            <select class="form-select" id="modalCorrect" name="correct_answer">
+                                <option value="A">א</option>
+                                <option value="B">ב</option>
+                                <option value="C">ג</option>
+                                <option value="D">ד</option>
+                                <option value="E">ה</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label">רמת קושי</label>
+                            <select class="form-select" id="modalDifficulty" name="difficulty">
+                                <option value="easy">קל</option>
+                                <option value="medium">בינוני</option>
+                                <option value="hard">קשה</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">הסבר</label>
+                        <textarea class="form-control" id="modalExplanation" name="explanation_he" rows="3" dir="rtl"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                    <button type="submit" class="btn btn-primary">שמור שינויים</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if not exam %}
+<script>
+document.querySelectorAll('.q-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const area = document.getElementById('selectedArea');
+        const form = document.getElementById('examForm');
+        // Remove old hidden inputs
+        form.querySelectorAll('input[name="question_ids"]').forEach(i => i.remove());
+
+        const checked = document.querySelectorAll('.q-checkbox:checked');
+        if (checked.length > 0) {
+            document.getElementById('noSelection').style.display = 'none';
+            let html = `<span class="badge bg-primary fs-6">${checked.length} שאלות נבחרו</span>`;
+            area.innerHTML = html;
+            checked.forEach(c => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'question_ids';
+                inp.value = c.value;
+                form.appendChild(inp);
+            });
+        } else {
+            area.innerHTML = '<p class="text-muted" id="noSelection">סמן שאלות מהרשימה בצד</p>';
+        }
+    });
+});
+</script>
+{% endif %}
+
+<script>
+// Store all question data
+const questionsData = {
+{% for q in questions %}
+    {{ q.id }}: {
+        stem: {{ (q.stem_he or '')|tojson }},
+        optA: {{ (q.option_a or '')|tojson }},
+        optB: {{ (q.option_b or '')|tojson }},
+        optC: {{ (q.option_c or '')|tojson }},
+        optD: {{ (q.option_d or '')|tojson }},
+        optE: {{ (q.option_e or '')|tojson }},
+        correct: {{ (q.correct_answer or 'A')|tojson }},
+        explanation: {{ (q.explanation_he or '')|tojson }},
+        difficulty: {{ (q.difficulty or 'medium')|tojson }},
+        topic: {{ (q.topic_he or '')|tojson }},
+        topicId: {{ q.topic_id or 0 }}
+    },
+{% endfor %}
+};
+
+function showQuestion(id) {
+    const q = questionsData[id];
+    if (!q) return;
+
+    document.getElementById('modalTopic').textContent = q.topic;
+    document.getElementById('modalStem').value = q.stem;
+    document.getElementById('modalOptA').value = q.optA;
+    document.getElementById('modalOptB').value = q.optB;
+    document.getElementById('modalOptC').value = q.optC;
+    document.getElementById('modalOptD').value = q.optD;
+    document.getElementById('modalOptE').value = q.optE || '';
+    document.getElementById('modalCorrect').value = q.correct;
+    document.getElementById('modalDifficulty').value = q.difficulty;
+    document.getElementById('modalExplanation').value = q.explanation || '';
+    document.getElementById('modalTopicId').value = q.topicId;
+    document.getElementById('questionEditForm').action = '/questions/' + id;
+
+    new bootstrap.Modal(document.getElementById('questionModal')).show();
+}
+</script>
+{% endblock %}

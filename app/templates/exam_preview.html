@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}תצוגה מקדימה: {{ exam.title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h2>{{ exam.title }}</h2>
+    <div>
+        <a href="/export/exam/{{ exam.id }}/docx" class="btn btn-success">ייצוא Word</a>
+        <button onclick="window.print()" class="btn btn-outline-secondary">הדפסה</button>
+        <a href="/exams/{{ exam.id }}" class="btn btn-outline-primary">חזרה לעריכה</a>
+    </div>
+</div>
+
+<div class="card exam-preview">
+    <div class="card-body">
+        <h3 class="text-center mb-4">{{ exam.title }}</h3>
+        {% if exam.description %}
+        <p class="text-center text-muted mb-4">{{ exam.description }}</p>
+        {% endif %}
+
+        {% for q in questions %}
+        <div class="question-block mb-4">
+            <p class="fw-bold">{{ q.position }}. {{ q.stem_he }}</p>
+            <div class="me-4">
+                {% if q.option_a %}<p class="mb-1">א. {{ q.option_a }}</p>{% endif %}
+                {% if q.option_b %}<p class="mb-1">ב. {{ q.option_b }}</p>{% endif %}
+                {% if q.option_c %}<p class="mb-1">ג. {{ q.option_c }}</p>{% endif %}
+                {% if q.option_d %}<p class="mb-1">ד. {{ q.option_d }}</p>{% endif %}
+                {% if q.option_e %}<p class="mb-1">ה. {{ q.option_e }}</p>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <hr class="my-5">
+        <h4 class="text-center mb-4">מפתח תשובות</h4>
+        {% set answer_map = {'A': 'א', 'B': 'ב', 'C': 'ג', 'D': 'ד', 'E': 'ה'} %}
+        {% for q in questions %}
+        <div class="mb-3">
+            <p class="fw-bold mb-1">{{ q.position }}. {{ answer_map.get(q.correct_answer, q.correct_answer) }}</p>
+            {% if q.explanation_he %}
+            <p class="text-muted small">{{ q.explanation_he }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

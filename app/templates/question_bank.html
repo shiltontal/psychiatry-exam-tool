@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}בנק שאלות{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>בנק שאלות ({{ questions|length }})</h2>
+    <a href="/questions/generate" class="btn btn-primary">יצירת שאלות חדשות</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small">פרק</label>
+                <select class="form-select form-select-sm" name="chapter">
+                    <option value="">הכל</option>
+                    {% for ch in chapters %}
+                    <option value="{{ ch.chapter_code }}" {{ 'selected' if f_chapter == ch.chapter_code else '' }}>{{ ch.chapter_he }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">נושא</label>
+                <select class="form-select form-select-sm" name="topic_id">
+                    <option value="">הכל</option>
+                    {% for t in topics %}
+                    <option value="{{ t.id }}" {{ 'selected' if f_topic == t.id|string else '' }}>{{ t.hebrew|truncate(40) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">סטטוס</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">הכל</option>
+                    {% for val, label in [('draft', 'טיוטה'), ('review', 'בסקירה'), ('approved', 'מאושר'), ('rejected', 'נדחה')] %}
+                    <option value="{{ val }}" {{ 'selected' if f_status == val else '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">קושי</label>
+                <select class="form-select form-select-sm" name="difficulty">
+                    <option value="">הכל</option>
+                    {% for val, label in [('easy', 'קל'), ('medium', 'בינוני'), ('hard', 'קשה')] %}
+                    <option value="{{ val }}" {{ 'selected' if f_difficulty == val else '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">חיפוש</label>
+                <input type="text" class="form-control form-control-sm" name="search" value="{{ f_search }}" placeholder="טקסט חופשי..." dir="rtl">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100">סנן</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Questions Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width:50px">#</th>
+                    <th style="width:150px">נושא</th>
+                    <th>שאלה</th>
+                    <th style="width:80px">קושי</th>
+                    <th style="width:80px">סטטוס</th>
+                    <th style="width:140px">פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in questions %}
+                <tr>
+                    <td>{{ q.id }}</td>
+                    <td><small>{{ q.topic_he|truncate(30) }}</small></td>
+                    <td><a href="/questions/{{ q.id }}">{{ q.stem_he|truncate(80) }}</a></td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if q.difficulty == 'easy' else ('warning' if q.difficulty == 'medium' else 'danger') }}">
+                            {{ {'easy': 'קל', 'medium': 'בינוני', 'hard': 'קשה'}.get(q.difficulty, q.difficulty) }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if q.status == 'approved' else ('warning' if q.status == 'review' else ('danger' if q.status == 'rejected' else 'secondary')) }}">
+                            {{ {'draft': 'טיוטה', 'review': 'בסקירה', 'approved': 'מאושר', 'rejected': 'נדחה'}.get(q.status, q.status) }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="/questions/{{ q.id }}" class="btn btn-outline-primary" title="ערוך">✏️</a>
+                            {% if q.status == 'draft' %}
+                            <form method="POST" action="/questions/{{ q.id }}/status/approved" class="d-inline">
+                                <button class="btn btn-outline-success" title="אשר">✓</button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="/questions/{{ q.id }}/delete" class="d-inline"
+                                  onsubmit="return confirm('למחוק?')">
+                                <button class="btn btn-outline-danger" title="מחק">✗</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not questions %}
+                <tr><td colspan="6" class="text-center text-muted py-4">לא נמצאו שאלות. <a href="/questions/generate">צור שאלות חדשות</a></td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

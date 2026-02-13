@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}מבחנים{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>מבחנים</h2>
+    <a href="/exams/new" class="btn btn-primary">מבחן חדש</a>
+</div>
+
+{% if exams %}
+<div class="row">
+    {% for e in exams %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ e.title }}</h5>
+                <p class="card-text text-muted">{{ e.description or 'ללא תיאור' }}</p>
+                <p><span class="badge bg-primary fs-6">{{ e.question_count }} שאלות</span></p>
+                <small class="text-muted">{{ e.created_at }}</small>
+            </div>
+            <div class="card-footer d-flex gap-1">
+                <a href="/exams/{{ e.id }}" class="btn btn-sm btn-outline-primary flex-fill">ערוך</a>
+                <a href="/exams/{{ e.id }}/preview" class="btn btn-sm btn-outline-info flex-fill">צפה</a>
+                <a href="/export/exam/{{ e.id }}/docx" class="btn btn-sm btn-outline-success flex-fill">Word</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <h4 class="text-muted">אין מבחנים עדיין</h4>
+    <a href="/exams/new" class="btn btn-primary mt-3">צור מבחן ראשון</a>
+</div>
+{% endif %}
+{% endblock %}

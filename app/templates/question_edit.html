@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}עריכת שאלה #{{ q.id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>עריכת שאלה #{{ q.id }}</h2>
+    <div>
+        <span class="badge bg-{{ 'success' if q.status == 'approved' else ('warning' if q.status == 'review' else ('danger' if q.status == 'rejected' else 'secondary')) }} fs-6">
+            {{ q.status }}
+        </span>
+        {% if q.ai_generated %}<span class="badge bg-info fs-6">AI</span>{% endif %}
+    </div>
+</div>
+
+<form method="POST" action="/questions/{{ q.id }}">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header"><strong>גזע השאלה</strong></div>
+                <div class="card-body">
+                    <textarea class="form-control rtl-input" name="stem_he" rows="5" required dir="rtl">{{ q.stem_he }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><strong>תשובות</strong></div>
+                <div class="card-body">
+                    {% for letter, field, label in [('A', 'option_a', 'א'), ('B', 'option_b', 'ב'), ('C', 'option_c', 'ג'), ('D', 'option_d', 'ד'), ('E', 'option_e', 'ה')] %}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">
+                            <input type="radio" name="correct_answer" value="{{ letter }}"
+                                   {{ 'checked' if q.correct_answer == letter else '' }}
+                                   class="form-check-input mt-0">
+                        </span>
+                        <span class="input-group-text fw-bold">{{ label }}</span>
+                        <input type="text" class="form-control rtl-input" name="{{ field }}" dir="rtl"
+                               value="{{ q[field] or '' }}" {{ 'required' if letter != 'E' else '' }}
+                               placeholder="{{ 'אופציונלי' if letter == 'E' else '' }}">
+                    </div>
+                    {% endfor %}
+                    <small class="text-muted">סמן את התשובה הנכונה בכפתור הרדיו</small>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><strong>הסבר</strong></div>
+                <div class="card-body">
+                    <textarea class="form-control rtl-input" name="explanation_he" rows="4" dir="rtl">{{ q.explanation_he or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header"><strong>מאפיינים</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">נושא</label>
+                        <select class="form-select" name="topic_id">
+                            {% for t in topics %}
+                            <option value="{{ t.id }}" {{ 'selected' if t.id == q.topic_id else '' }}>{{ t.hebrew }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">רמת קושי</label>
+                        <select class="form-select" name="difficulty">
+                            {% for val, label in [('easy', 'קל'), ('medium', 'בינוני'), ('hard', 'קשה')] %}
+                            <option value="{{ val }}" {{ 'selected' if q.difficulty == val else '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">רמת בלום</label>
+                        <select class="form-select" name="bloom_level">
+                            {% for val, label in [('remember', 'זכירה'), ('understand', 'הבנה'), ('application', 'יישום'), ('analyze', 'ניתוח'), ('evaluate', 'הערכה')] %}
+                            <option value="{{ val }}" {{ 'selected' if q.bloom_level == val else '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">סטטוס</label>
+                        <select class="form-select" name="status">
+                            {% for val, label in [('draft', 'טיוטה'), ('review', 'בסקירה'), ('approved', 'מאושר'), ('rejected', 'נדחה')] %}
+                            <option value="{{ val }}" {{ 'selected' if q.status == val else '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-2">שמור שינויים</button>
+            <a href="/questions/" class="btn btn-outline-secondary w-100 mb-2">חזרה לבנק</a>
+            <form method="POST" action="/questions/{{ q.id }}/delete" class="d-inline w-100"
+                  onsubmit="return confirm('למחוק את השאלה?')">
+                <button type="submit" class="btn btn-outline-danger w-100">מחק שאלה</button>
+            </form>
+        </div>
+    </div>
+</form>
+{% endblock %}
