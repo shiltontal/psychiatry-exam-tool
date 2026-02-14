@@ -40,20 +40,27 @@ def import_syllabus_data():
             )
         print(f"Imported {len(phase1['topics'])} topics.")
 
-    # Always update mappings from JSON (INSERT OR REPLACE)
-    for m in phase2['results']:
-        conn.execute(
-            "INSERT OR REPLACE INTO topic_mappings (topic_id, synopsis_pages, synopsis_titles, "
-            "synopsis_page_count, synopsis_confidence, dulcan_pages, dulcan_titles, "
-            "dulcan_page_count, dulcan_confidence, search_terms) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (m['id'], m.get('synopsis_toc_pages', ''), m.get('synopsis_toc_titles', ''),
-             m.get('synopsis_text_pages_count', 0), m.get('synopsis_confidence', ''),
-             m.get('dulcan_toc_pages', ''), m.get('dulcan_toc_titles', ''),
-             m.get('dulcan_text_pages_count', 0), m.get('dulcan_confidence', ''),
-             m.get('search_terms_used', ''))
-        )
-    print(f"Updated {len(phase2['results'])} topic mappings.")
+    # Import/update mappings - check if we need to add any missing ones
+    existing_ids = {row[0] for row in conn.execute("SELECT topic_id FROM topic_mappings").fetchall()}
+    json_ids = {m['id'] for m in phase2['results']}
+    missing_ids = json_ids - existing_ids
+
+    if missing_ids or mappings_count == 0:
+        for m in phase2['results']:
+            conn.execute(
+                "INSERT OR REPLACE INTO topic_mappings (topic_id, synopsis_pages, synopsis_titles, "
+                "synopsis_page_count, synopsis_confidence, dulcan_pages, dulcan_titles, "
+                "dulcan_page_count, dulcan_confidence, search_terms) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (m['id'], m.get('synopsis_toc_pages', ''), m.get('synopsis_toc_titles', ''),
+                 m.get('synopsis_text_pages_count', 0), m.get('synopsis_confidence', ''),
+                 m.get('dulcan_toc_pages', ''), m.get('dulcan_toc_titles', ''),
+                 m.get('dulcan_text_pages_count', 0), m.get('dulcan_confidence', ''),
+                 m.get('search_terms_used', ''))
+            )
+        print(f"Updated {len(phase2['results'])} topic mappings (found {len(missing_ids)} new).")
+    else:
+        print(f"Mappings up to date ({mappings_count} existing).")
 
     conn.commit()
     conn.close()
