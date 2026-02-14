@@ -92,10 +92,15 @@ def generate_run():
     difficulty = request.form.get('difficulty', 'medium')
     clinical_task = request.form.get('clinical_task', 'mixed')
     subtopic_ids = request.form.getlist('subtopic_ids', type=int) or None
+    bloom_level = request.form.get('bloom_level', 'application')
+    category = request.form.get('category', 'diagnosis')
 
     try:
         from app.ai_generator import generate_questions
-        created_ids = generate_questions(topic_id, count, difficulty, clinical_task, subtopic_ids)
+        created_ids = generate_questions(
+            topic_id, count, difficulty, clinical_task, subtopic_ids,
+            bloom_level=bloom_level, category=category
+        )
         flash(f'נוצרו {len(created_ids)} שאלות חדשות בהצלחה!', 'success')
     except Exception as e:
         flash(f'שגיאה ביצירת שאלות: {str(e)}', 'error')

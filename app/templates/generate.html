@@ -62,7 +62,32 @@
                                 <option value="hard">קשה</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">רמת Bloom</label>
+                            <select class="form-select" name="bloom_level">
+                                <option value="application" selected>יישום (Application)</option>
+                                <option value="analysis">ניתוח (Analysis)</option>
+                                <option value="evaluation">הערכה (Evaluation)</option>
+                                <option value="synthesis">סינתזה (Synthesis)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">קטגוריה</label>
+                            <select class="form-select" name="category">
+                                <option value="diagnosis" selected>אבחנה</option>
+                                <option value="treatment">טיפול</option>
+                                <option value="pharmacology">פרמקולוגיה</option>
+                                <option value="assessment">הערכה ובדיקות</option>
+                                <option value="emergency">מצבי חירום</option>
+                                <option value="development">התפתחות</option>
+                                <option value="comorbidity">תחלואה נלווית</option>
+                                <option value="psychotherapy">פסיכותרפיה</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold">מטרת השאלה</label>
                             <select class="form-select" name="clinical_task">
                                 <option value="mixed" selected>מגוון</option>
@@ -93,10 +118,19 @@
                 <ul>
                     <li>בחר פרק ונושא מהסילבוס</li>
                     <li>ניתן לבחור תת-נושאים ספציפיים למיקוד השאלות</li>
-                    <li>בחר מטרת השאלה כדי לכוון את סוג התרחיש</li>
+                    <li><strong>רמת Bloom:</strong> יישום, ניתוח, הערכה או סינתזה</li>
+                    <li><strong>קטגוריה:</strong> אבחנה, טיפול, פרמקולוגיה וכו'</li>
                     <li>ה-AI יחלץ תוכן רלוונטי מספרי הלימוד</li>
-                    <li>השאלות ייווצרו בעברית בפורמט MCQ</li>
+                    <li>כל שאלה עוברת בדיקה פסיכומטרית אוטומטית</li>
                     <li>השאלות נשמרות כטיוטות לעריכה ואישור</li>
+                </ul>
+                <hr>
+                <p class="mb-1"><strong>רמות Bloom:</strong></p>
+                <ul class="mb-0">
+                    <li><strong>יישום:</strong> החלטה אבחנתית/טיפולית</li>
+                    <li><strong>ניתוח:</strong> ניתוח מידע מורכב</li>
+                    <li><strong>הערכה:</strong> השוואה בין אפשרויות</li>
+                    <li><strong>סינתזה:</strong> שילוב ממקורות שונים</li>
                 </ul>
             </div>
         </div>
