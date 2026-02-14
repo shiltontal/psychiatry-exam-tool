@@ -30,6 +30,11 @@ def bank():
         filters.append("q.difficulty = ?")
         params.append(difficulty)
 
+    language = request.args.get('language', '')
+    if language:
+        filters.append("COALESCE(q.language, 'he') = ?")
+        params.append(language)
+
     search = request.args.get('search', '')
     if search:
         filters.append("q.stem_he LIKE ?")
@@ -55,7 +60,8 @@ def bank():
     return render_template('question_bank.html', questions=questions,
                            chapters=chapters, topics=topics,
                            f_chapter=chapter, f_topic=topic_id,
-                           f_status=status, f_difficulty=difficulty, f_search=search)
+                           f_status=status, f_difficulty=difficulty, f_search=search,
+                           f_language=language)
 
 
 @bp.route('/generate', methods=['GET'])
@@ -94,14 +100,16 @@ def generate_run():
     subtopic_ids = request.form.getlist('subtopic_ids', type=int) or None
     bloom_level = request.form.get('bloom_level', 'application')
     category = request.form.get('category', 'diagnosis')
+    language = request.form.get('language', 'he')
 
     try:
         from app.ai_generator import generate_questions
         created_ids = generate_questions(
             topic_id, count, difficulty, clinical_task, subtopic_ids,
-            bloom_level=bloom_level, category=category
+            bloom_level=bloom_level, category=category, language=language
         )
-        flash(f'נוצרו {len(created_ids)} שאלות חדשות בהצלחה!', 'success')
+        success_msg = 'נוצרו {} שאלות חדשות בהצלחה!' if language == 'he' else 'تم إنشاء {} أسئلة جديدة بنجاح!'
+        flash(success_msg.format(len(created_ids)), 'success')
     except Exception as e:
         flash(f'שגיאה ביצירת שאלות: {str(e)}', 'error')
         return redirect(url_for('questions.generate_form'))

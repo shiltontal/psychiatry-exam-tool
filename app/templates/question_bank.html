@@ -37,13 +37,21 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label class="form-label small">קושי</label>
                 <select class="form-select form-select-sm" name="difficulty">
                     <option value="">הכל</option>
                     {% for val, label in [('easy', 'קל'), ('medium', 'בינוני'), ('hard', 'קשה')] %}
                     <option value="{{ val }}" {{ 'selected' if f_difficulty == val else '' }}>{{ label }}</option>
                     {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small">שפה</label>
+                <select class="form-select form-select-sm" name="language">
+                    <option value="">הכל</option>
+                    <option value="he" {{ 'selected' if f_language == 'he' else '' }}>עברית</option>
+                    <option value="ar" {{ 'selected' if f_language == 'ar' else '' }}>العربية</option>
                 </select>
             </div>
             <div class="col-md-2">

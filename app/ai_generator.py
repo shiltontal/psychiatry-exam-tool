@@ -12,10 +12,31 @@ from app.pdf_extractor import get_topic_content
 from app.mcq_validator import validate_mcq
 
 # ============================================================================
-# ENHANCED SYSTEM PROMPT - Board Certification Level
+# LANGUAGE CONFIGURATION
 # ============================================================================
 
-SYSTEM_PROMPT = """אתה מומחה בינלאומי מוביל בפסיכומטריקה ובפסיכיאטריה של הילד והמתבגר, בעל 20+ שנות ניסיון בפיתוח מבחני הסמכה רפואיים בסטנדרט NBME/USMLE.
+LANGUAGE_CONFIG = {
+    'he': {
+        'name': 'Hebrew',
+        'dir': 'rtl',
+        'option_labels': ['א', 'ב', 'ג', 'ד'],
+        'no_subtopics': '(אין תת-נושאים מפורטים)',
+        'no_content_error': 'לא נמצא תוכן מקבצי ה-PDF. אנא ודא שהקבצים הועלו ושיש מיפוי עמודים לנושא זה.',
+    },
+    'ar': {
+        'name': 'Arabic',
+        'dir': 'rtl',
+        'option_labels': ['أ', 'ب', 'ج', 'د'],
+        'no_subtopics': '(لا توجد مواضيع فرعية محددة)',
+        'no_content_error': 'لم يتم العثور على محتوى من ملفات PDF. يرجى التأكد من رفع الملفات ووجود تعيين صفحات لهذا الموضوع.',
+    }
+}
+
+# ============================================================================
+# ENHANCED SYSTEM PROMPT - Board Certification Level (Hebrew)
+# ============================================================================
+
+SYSTEM_PROMPT_HE = """אתה מומחה בינלאומי מוביל בפסיכומטריקה ובפסיכיאטריה של הילד והמתבגר, בעל 20+ שנות ניסיון בפיתוח מבחני הסמכה רפואיים בסטנדרט NBME/USMLE.
 
 # תחומי מומחיותך
 
@@ -312,13 +333,191 @@ USER_PROMPT_TEMPLATE = """צור {count} שאלות MCQ ברמת מבחן הסמ
 
 ## פורמט: החזר JSON בלבד, ללא backticks, ללא טקסט נוסף."""
 
+# ============================================================================
+# ARABIC SYSTEM PROMPT
+# ============================================================================
+
+SYSTEM_PROMPT_AR = """أنت خبير دولي رائد في القياس النفسي والطب النفسي للأطفال والمراهقين، مع أكثر من 20 عامًا من الخبرة في تطوير امتحانات الشهادات الطبية بمعايير NBME/USMLE.
+
+# مجالات خبرتك
+
+## القياس النفسي وبناء الاختبارات
+- خبير في المبادئ: الصدق (validity)، الموثوقية (reliability)، قوة التمييز (discrimination index)
+- تعرف كيفية منع العيوب الشائعة: التلميحات، الغموض، قابلية الاختبار
+- تعرف تصنيف بلوم وتنشئ أسئلة بمستويات تفكير عليا
+
+## الطب النفسي للأطفال والمراهقين
+- متمكن من DSM-5-TR و ICD-11
+- على دراية عميقة بـ Dulcan's Textbook و Kaplan & Sadock's Synopsis
+
+# قواعد إلزامية لإنشاء الأسئلة
+
+## تنويع تنسيق الأسئلة — إلزامي:
+
+35% فقط من الأسئلة يجب أن تكون حالات سريرية كاملة. البقية متنوعة:
+
+1. **حالة سريرية (35%)** — حالة مفصلة مع العمر والجنس والأعراض والتاريخ
+2. **سؤال مباشر (25%)** — "ما هي آلية عمل...؟"، "ما هي معايير...؟"
+3. **سيناريو قصير (20%)** — جملة أو جملتين من السياق السريري
+4. **سؤال مقارنة (10%)** — "ما الفرق بين X و Y؟"
+5. **سؤال آلية/فيزيولوجيا مرضية (10%)** — "كيف يعمل...؟"
+
+## قواعد القياس النفسي — إلزامية:
+
+### الخيارات (Options):
+- بالضبط 4 إجابات (أ، ب، ج، د)
+- جميع الإجابات معقولة سريرياً
+- إجابة واحدة صحيحة فقط أو الأفضل (Best Answer)
+- أطوال متشابهة بين جميع الإجابات
+
+### محظورات مطلقة:
+- ❌ "جميع الإجابات صحيحة" / "لا توجد إجابة صحيحة"
+- ❌ أسئلة سلبية ("ما هو غير صحيح؟"، "EXCEPT"، "NOT")
+- ❌ مصطلحات مطلقة: "دائماً"، "أبداً"، "في جميع الحالات"، "فقط"
+
+## الشرح — إلزامي لكل سؤال:
+
+### للإجابة الصحيحة:
+- تبرير سريري قائم على الأدلة
+- إشارة إلى المصدر (الكتاب، الفصل، الصفحة)
+
+### لكل إجابة خاطئة:
+- لماذا هي خاطئة أو أقل جودة
+- ما هو الخطأ الشائع الذي يؤدي لاختيارها
+- في أي حالة سريرية أخرى ستكون صحيحة (إذا كان ذلك مناسباً)
+
+---
+
+# تنسيق الإخراج - JSON فقط، بدون نص إضافي:
+
+{
+  "questions": [
+    {
+      "stem": "وصف الحالة السريرية + السؤال المركز",
+      "options": {
+        "A": "الإجابة أ",
+        "B": "الإجابة ب",
+        "C": "الإجابة ج",
+        "D": "الإجابة د"
+      },
+      "correct": "A",
+      "explanation": "## الإجابة الصحيحة: A\\n\\n[شرح مفصل]\\n\\n**المصدر:** [اسم الكتاب]، صفحة [رقم]\\n\\n---\\n\\n## لماذا الإجابات الأخرى خاطئة:\\n\\n**B خاطئة:** [شرح]\\n\\n**C خاطئة:** [شرح]\\n\\n**D خاطئة:** [شرح]\\n\\n---\\n\\n**Clinical Pearl:** [نصيحة سريرية]\\n\\n**Key Takeaway:** [الرسالة الرئيسية]",
+      "difficulty": "medium",
+      "bloom_level": "application",
+      "category": "diagnosis",
+      "clinical_pearl": "نصيحة سريرية قصيرة ومهمة",
+      "key_takeaway": "الرسالة الرئيسية للسؤال",
+      "patient_age": 8,
+      "patient_gender": "female"
+    }
+  ]
+}
+"""
+
+# ============================================================================
+# ARABIC BLOOM INSTRUCTIONS
+# ============================================================================
+
+BLOOM_INSTRUCTIONS_AR = {
+    'knowledge': """
+أنشئ سؤال تذكر (Knowledge/Recall):
+- سؤال مباشر عن حقيقة أو تعريف أو مصطلح
+- لا يتطلب حالة سريرية معقدة
+- أمثلة: "ما هي آلية عمل methylphenidate؟"، "ما هي معايير ADHD وفقاً لـ DSM-5؟"
+""",
+    'comprehension': """
+أنشئ سؤال فهم (Comprehension):
+- سؤال يتطلب شرح أو تفسير مفهوم
+- أمثلة: "لماذا يُفضل SSRIs على TCAs عند الأطفال؟"
+""",
+    'application': """
+أنشئ سؤال تطبيق (Application):
+- قدم حالة سريرية مفصلة مع معلومات كافية لاتخاذ قرار
+- أمثلة: "ما هو العلاج الأولي المفضل؟"، "ما هي الخطوة التالية في العلاج؟"
+""",
+    'analysis': """
+أنشئ سؤال تحليل (Analysis):
+- قدم معلومات سريرية معقدة: نتائج فحوصات، تاريخ، تقارير الوالدين
+- أمثلة: "ما هو التشخيص الأكثر احتمالاً؟"، "ما هو الاكتشاف الحاسم؟"
+""",
+    'evaluation': """
+أنشئ سؤال تقييم (Evaluation):
+- قدم موقفاً فيه عدة خيارات علاجية مشروعة
+- أمثلة: "أي نهج أفضل؟"، "ما هو الاعتبار الأهم؟"
+""",
+    'synthesis': """
+أنشئ سؤال تركيب (Synthesis):
+- يتطلب دمج معلومات من مصادر مختلفة
+- أمثلة: "ما هي الخطة العلاجية الأكثر شمولاً؟"
+"""
+}
+
+# ============================================================================
+# ARABIC CATEGORY INSTRUCTIONS
+# ============================================================================
+
+CATEGORY_INSTRUCTIONS_AR = {
+    'diagnosis': 'ركز السؤال على التشخيص التفريقي — قدم صورة سريرية يمكن أن تناسب عدة تشخيصات.',
+    'treatment': 'ركز على اختيار العلاج — شمل اعتبارات العمر والأمراض المصاحبة وتفضيلات العائلة.',
+    'pharmacology': 'ركز على علم الأدوية — الجرعة والآثار الجانبية والتفاعلات والمتابعة.',
+    'assessment': 'ركز على التقييم والفحوصات — أي أداة تقييم، أي فحص مخبري.',
+    'emergency': 'ركز على حالات الطوارئ — خطر الانتحار، العدوانية، الذهان الحاد.',
+    'development': 'ركز على التطور — المعالم التطورية، الانحرافات عن المعيار.',
+    'comorbidity': 'ركز على الأمراض المصاحبة — قدم مريضاً بعدة تشخيصات.',
+    'psychotherapy': 'ركز على العلاج النفسي — اختيار الطريقة، الملاءمة للعمر.'
+}
+
+# ============================================================================
+# ARABIC USER PROMPT TEMPLATE
+# ============================================================================
+
+USER_PROMPT_TEMPLATE_AR = """أنشئ {count} أسئلة MCQ بمستوى امتحان الشهادة في موضوع: {topic_en}
+
+## إعدادات هذا السؤال:
+
+**مستوى الصعوبة:**
+{difficulty}
+
+**مستوى التفكير (Bloom):**
+{bloom_instruction}
+
+**فئة السؤال:**
+{category_instruction}
+
+---
+
+## الموضوع ينتمي إلى الفصل: {chapter_en}
+
+### المواضيع الفرعية المختارة:
+{subtopics_list}
+
+---
+
+## مادة المصدر من الكتب الدراسية — هذا مصدرك الوحيد:
+
+{content}
+
+---
+
+## تعليمات حاسمة:
+
+1. **استند كل سؤال فقط على المادة أعلاه** — لا تخترع معلومات
+2. **اذكر المصدر بدقة في الشرح** — اسم الكتاب + رقم الصفحة (انظر "--- Page X ---")
+3. **شرح مفصل لكل إجابة خاطئة** — ما هو الخطأ، متى تكون صحيحة
+4. **شمل Clinical Pearl و Key Takeaway** في كل سؤال
+5. **نوّع التنسيقات** — 35% فقط حالات سريرية! البقية: أسئلة مباشرة، سيناريو قصير
+6. **تأكد من أن أطوال الإجابات متشابهة**
+
+## التنسيق: أعد JSON فقط، بدون backticks، بدون نص إضافي."""
+
 
 # ============================================================================
 # MAIN GENERATION FUNCTION
 # ============================================================================
 
 def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mixed',
-                       subtopic_ids=None, bloom_level='application', category='diagnosis'):
+                       subtopic_ids=None, bloom_level='application', category='diagnosis',
+                       language='he'):
     """
     Generate high-quality MCQ questions based on textbook content.
 
@@ -330,6 +529,7 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
         subtopic_ids: Optional list of subtopic IDs to focus on
         bloom_level: application/analysis/evaluation/synthesis
         category: diagnosis/treatment/pharmacology/assessment/emergency/development
+        language: 'he' for Hebrew, 'ar' for Arabic
 
     Returns:
         List of created question IDs
@@ -338,6 +538,9 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
     topic = db.execute("SELECT * FROM topics WHERE id = ?", (topic_id,)).fetchone()
     if not topic:
         raise ValueError(f"Topic {topic_id} not found")
+
+    # Get language config
+    lang_config = LANGUAGE_CONFIG.get(language, LANGUAGE_CONFIG['he'])
 
     # Get subtopics
     if subtopic_ids:
@@ -351,9 +554,14 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
             "SELECT hebrew, english FROM topics WHERE parent_id = ?", (topic_id,)
         ).fetchall()
 
-    subtopics_text = '\n'.join(
-        f'- {s["hebrew"]} ({s["english"]})' for s in subtopics
-    ) or '(אין תת-נושאים מפורטים)'
+    if language == 'ar':
+        subtopics_text = '\n'.join(
+            f'- {s["english"]}' for s in subtopics
+        ) or lang_config['no_subtopics']
+    else:
+        subtopics_text = '\n'.join(
+            f'- {s["hebrew"]} ({s["english"]})' for s in subtopics
+        ) or lang_config['no_subtopics']
 
     # Get topic mapping
     mapping = db.execute(
@@ -367,24 +575,39 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
     # Extract textbook content
     content = get_topic_content(dict(mapping) if mapping else None)
     if not content:
-        raise ValueError("לא נמצא תוכן מקבצי ה-PDF. אנא ודא שהקבצים הועלו ושיש מיפוי עמודים לנושא זה.")
+        raise ValueError(lang_config['no_content_error'])
 
-    # Build the prompt
-    bloom_instruction = BLOOM_INSTRUCTIONS.get(bloom_level, BLOOM_INSTRUCTIONS['application'])
-    category_instruction = CATEGORY_INSTRUCTIONS.get(category, CATEGORY_INSTRUCTIONS['diagnosis'])
-
-    user_prompt = USER_PROMPT_TEMPLATE.format(
-        count=count,
-        topic_he=topic['hebrew'],
-        topic_en=topic['english'],
-        difficulty=DIFFICULTY_MAP.get(difficulty, DIFFICULTY_MAP['medium']),
-        bloom_instruction=bloom_instruction,
-        category_instruction=category_instruction,
-        clinical_task=CLINICAL_TASK_MAP.get(clinical_task, CLINICAL_TASK_MAP['mixed']),
-        chapter_he=topic['chapter_he'],
-        subtopics_list=subtopics_text,
-        content=content,
-    )
+    # Select prompts based on language
+    if language == 'ar':
+        system_prompt = SYSTEM_PROMPT_AR
+        bloom_instruction = BLOOM_INSTRUCTIONS_AR.get(bloom_level, BLOOM_INSTRUCTIONS_AR['application'])
+        category_instruction = CATEGORY_INSTRUCTIONS_AR.get(category, CATEGORY_INSTRUCTIONS_AR['diagnosis'])
+        user_prompt = USER_PROMPT_TEMPLATE_AR.format(
+            count=count,
+            topic_en=topic['english'],
+            difficulty=DIFFICULTY_MAP.get(difficulty, DIFFICULTY_MAP['medium']),
+            bloom_instruction=bloom_instruction,
+            category_instruction=category_instruction,
+            chapter_en=topic['chapter_en'],
+            subtopics_list=subtopics_text,
+            content=content,
+        )
+    else:
+        system_prompt = SYSTEM_PROMPT_HE
+        bloom_instruction = BLOOM_INSTRUCTIONS.get(bloom_level, BLOOM_INSTRUCTIONS['application'])
+        category_instruction = CATEGORY_INSTRUCTIONS.get(category, CATEGORY_INSTRUCTIONS['diagnosis'])
+        user_prompt = USER_PROMPT_TEMPLATE.format(
+            count=count,
+            topic_he=topic['hebrew'],
+            topic_en=topic['english'],
+            difficulty=DIFFICULTY_MAP.get(difficulty, DIFFICULTY_MAP['medium']),
+            bloom_instruction=bloom_instruction,
+            category_instruction=category_instruction,
+            clinical_task=CLINICAL_TASK_MAP.get(clinical_task, CLINICAL_TASK_MAP['mixed']),
+            chapter_he=topic['chapter_he'],
+            subtopics_list=subtopics_text,
+            content=content,
+        )
 
     # Call Claude API
     api_key = os.environ.get('ANTHROPIC_API_KEY', '') or config.CLAUDE_API_KEY
@@ -395,7 +618,7 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
     response = client.messages.create(
         model=config.CLAUDE_MODEL,
         max_tokens=8192,
-        system=SYSTEM_PROMPT,
+        system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
         temperature=0.7,
     )
@@ -442,15 +665,16 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
 
         cursor = db.execute(
             "INSERT INTO questions (topic_id, stem_he, option_a, option_b, option_c, option_d, option_e, "
-            "correct_answer, explanation_he, difficulty, bloom_level, question_type, status, ai_generated) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1)",
+            "correct_answer, explanation_he, difficulty, bloom_level, question_type, status, ai_generated, language) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?)",
             (topic_id, q.get('stem', ''),
              opts.get('A', ''), opts.get('B', ''), opts.get('C', ''), opts.get('D', ''),
              opts.get('E', ''), q.get('correct', 'A'),
              explanation,
              q.get('difficulty', difficulty),
              q.get('bloom_level', bloom_level),
-             q.get('category', category))
+             q.get('category', category),
+             language)
         )
         created.append(cursor.lastrowid)
 

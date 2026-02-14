@@ -130,6 +130,9 @@ def _migrate_db(conn):
     if 'question_type' not in columns:
         conn.execute("ALTER TABLE questions ADD COLUMN question_type TEXT DEFAULT ''")
         conn.commit()
+    if 'language' not in columns:
+        conn.execute("ALTER TABLE questions ADD COLUMN language TEXT DEFAULT 'he'")
+        conn.commit()
 
 
 def init_db(app):
