@@ -27,4 +27,4 @@ CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 MAX_EXTRACT_CHARS = 15000
 DEFAULT_QUESTION_COUNT = 3
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
-SITE_PASSWORD = os.environ.get('SITE_PASSWORD', 'change-me')
+SITE_PASSWORD = os.environ.get('SITE_PASSWORD', 'shilton12')
