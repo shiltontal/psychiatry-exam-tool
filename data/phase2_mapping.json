@@ -9,10 +9,10 @@
       "synopsis_toc_titles": "PSYCHIATRIC INTERVIEW, HISTORY, AND MENTAL STATUS EXAMINATION; PSYCHIATRIC EXAMINATION OF THE OLDER PATIENT",
       "synopsis_text_pages_count": 9,
       "synopsis_confidence": "HIGH",
-      "dulcan_toc_pages": "",
-      "dulcan_toc_titles": "",
+      "dulcan_toc_pages": "1-162",
+      "dulcan_toc_titles": "Part I: Clinical Assessment (Chapters 1-5)",
       "dulcan_text_pages_count": 35,
-      "dulcan_confidence": "MEDIUM",
+      "dulcan_confidence": "HIGH",
       "search_terms_used": "psychiatric examination, psychiatric assessment, mental status examination, child examination"
     },
     {
@@ -854,6 +854,54 @@
       "dulcan_text_pages_count": 13,
       "dulcan_confidence": "HIGH",
       "search_terms_used": "early childhood, infant mental health, parent-child interaction, dyadic therapy, DC:0-5"
+    },
+    {
+      "id": 2,
+      "chapter": "B: The Psychiatric Examination",
+      "topic_he": "מבנה ומרכיבי הבדיקה הפסיכיאטרית",
+      "topic_en": "Structure and components of the psychiatric examination",
+      "synopsis_toc_pages": "23-79",
+      "synopsis_toc_titles": "PSYCHIATRIC INTERVIEW, HISTORY, AND MENTAL STATUS EXAMINATION",
+      "synopsis_confidence": "HIGH",
+      "dulcan_toc_pages": "1-162",
+      "dulcan_toc_titles": "Part I: Clinical Assessment (Chapters 1-5)",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 3,
+      "chapter": "B: The Psychiatric Examination",
+      "topic_he": "בדיקת ילדים כולל גיל הרך",
+      "topic_en": "Child examination including early childhood",
+      "synopsis_toc_pages": "23-79",
+      "synopsis_toc_titles": "PSYCHIATRIC INTERVIEW",
+      "synopsis_confidence": "HIGH",
+      "dulcan_toc_pages": "70-115",
+      "dulcan_toc_titles": "Ch 2-3: Assessing Infants, Toddlers, Preschool",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 5,
+      "chapter": "B: The Psychiatric Examination",
+      "topic_he": "בדיקת מתבגרים",
+      "topic_en": "Adolescent examination",
+      "synopsis_toc_pages": "23-79",
+      "synopsis_toc_titles": "PSYCHIATRIC INTERVIEW",
+      "synopsis_confidence": "HIGH",
+      "dulcan_toc_pages": "139-162",
+      "dulcan_toc_titles": "Ch 5: Assessing Adolescents",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 6,
+      "chapter": "B: The Psychiatric Examination",
+      "topic_he": "ממדים בין-אישיים ורגשיים של הבדיקה",
+      "topic_en": "Interpersonal and emotional dimensions of the examination",
+      "synopsis_toc_pages": "23-79",
+      "synopsis_toc_titles": "PSYCHIATRIC INTERVIEW",
+      "synopsis_confidence": "MEDIUM",
+      "dulcan_toc_pages": "1-69",
+      "dulcan_toc_titles": "Ch 1: Clinical Assessment - Interpersonal aspects",
+      "dulcan_confidence": "MEDIUM"
     }
   ],
   "total": 57
