@@ -133,13 +133,22 @@ def _migrate_db(conn):
 
 
 def init_db(app):
+    import threading
+
     os.makedirs(config.DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(config.DB_PATH)
     conn.executescript(SCHEMA)
     _migrate_db(conn)
     conn.close()
-    # Delay syllabus import - only import if database is empty
-    try:
-        import_syllabus_data()
-    except Exception as e:
-        print(f"Warning: Could not import syllabus data: {e}")
+    print("Database schema initialized")
+
+    # Import syllabus data in background thread to avoid blocking startup
+    def background_import():
+        try:
+            import_syllabus_data()
+        except Exception as e:
+            print(f"Warning: Could not import syllabus data: {e}")
+
+    thread = threading.Thread(target=background_import, daemon=True)
+    thread.start()
+    print("Syllabus import started in background")
