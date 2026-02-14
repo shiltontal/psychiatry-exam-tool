@@ -104,11 +104,12 @@ def validate_mcq(question: Dict) -> Tuple[bool, int, List[Dict]]:
                     'severity': 'error'
                 })
 
-    # Check vignette length (stem should be substantial)
-    if len(stem) < 100:
+    # Check stem length - but allow shorter stems for direct/knowledge questions
+    # Only warn if very short (under 30 chars) which indicates incomplete question
+    if len(stem) < 30:
         issues.append({
-            'rule': 'vignette_too_short',
-            'message': 'תיאור המקרה קצר מדי — נדרש תיאור מפורט יותר',
+            'rule': 'stem_too_short',
+            'message': 'השאלה קצרה מדי',
             'severity': 'warning'
         })
 
