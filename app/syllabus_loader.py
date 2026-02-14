@@ -40,21 +40,20 @@ def import_syllabus_data():
             )
         print(f"Imported {len(phase1['topics'])} topics.")
 
-    # Import mappings if empty (even if topics exist)
-    if mappings_count == 0:
-        for m in phase2['results']:
-            conn.execute(
-                "INSERT OR REPLACE INTO topic_mappings (topic_id, synopsis_pages, synopsis_titles, "
-                "synopsis_page_count, synopsis_confidence, dulcan_pages, dulcan_titles, "
-                "dulcan_page_count, dulcan_confidence, search_terms) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (m['id'], m['synopsis_toc_pages'], m['synopsis_toc_titles'],
-                 m['synopsis_text_pages_count'], m['synopsis_confidence'],
-                 m['dulcan_toc_pages'], m['dulcan_toc_titles'],
-                 m['dulcan_text_pages_count'], m['dulcan_confidence'],
-                 m['search_terms_used'])
-            )
-        print(f"Imported {len(phase2['results'])} topic mappings.")
+    # Always update mappings from JSON (INSERT OR REPLACE)
+    for m in phase2['results']:
+        conn.execute(
+            "INSERT OR REPLACE INTO topic_mappings (topic_id, synopsis_pages, synopsis_titles, "
+            "synopsis_page_count, synopsis_confidence, dulcan_pages, dulcan_titles, "
+            "dulcan_page_count, dulcan_confidence, search_terms) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (m['id'], m.get('synopsis_toc_pages', ''), m.get('synopsis_toc_titles', ''),
+             m.get('synopsis_text_pages_count', 0), m.get('synopsis_confidence', ''),
+             m.get('dulcan_toc_pages', ''), m.get('dulcan_toc_titles', ''),
+             m.get('dulcan_text_pages_count', 0), m.get('dulcan_confidence', ''),
+             m.get('search_terms_used', ''))
+        )
+    print(f"Updated {len(phase2['results'])} topic mappings.")
 
     conn.commit()
     conn.close()
