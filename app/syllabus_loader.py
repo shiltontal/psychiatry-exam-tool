@@ -4,15 +4,30 @@ import config
 
 
 def import_syllabus_data():
+    import os
+
+    # Check if JSON files exist
+    if not os.path.exists(config.PHASE1_PATH):
+        print(f"Warning: {config.PHASE1_PATH} not found, skipping syllabus import")
+        return
+    if not os.path.exists(config.PHASE2_PATH):
+        print(f"Warning: {config.PHASE2_PATH} not found, skipping syllabus import")
+        return
+
     conn = sqlite3.connect(config.DB_PATH)
 
     topics_count = conn.execute("SELECT COUNT(*) FROM topics").fetchone()[0]
     mappings_count = conn.execute("SELECT COUNT(*) FROM topic_mappings").fetchone()[0]
 
-    with open(config.PHASE1_PATH, 'r', encoding='utf-8') as f:
-        phase1 = json.load(f)
-    with open(config.PHASE2_PATH, 'r', encoding='utf-8') as f:
-        phase2 = json.load(f)
+    try:
+        with open(config.PHASE1_PATH, 'r', encoding='utf-8') as f:
+            phase1 = json.load(f)
+        with open(config.PHASE2_PATH, 'r', encoding='utf-8') as f:
+            phase2 = json.load(f)
+    except Exception as e:
+        print(f"Error loading syllabus JSON files: {e}")
+        conn.close()
+        return
 
     # Import topics if empty
     if topics_count == 0:
