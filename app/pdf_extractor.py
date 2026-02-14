@@ -3,13 +3,21 @@ import config
 
 # Lazy load fitz (PyMuPDF) to save memory at startup
 fitz = None
+fitz_available = True
 
 
 def _get_fitz():
-    global fitz
+    global fitz, fitz_available
+    if not fitz_available:
+        return None
     if fitz is None:
-        import fitz as _fitz
-        fitz = _fitz
+        try:
+            import fitz as _fitz
+            fitz = _fitz
+        except ImportError as e:
+            print(f"Warning: PyMuPDF not available - PDF extraction disabled. Error: {e}")
+            fitz_available = False
+            return None
     return fitz
 
 
@@ -36,6 +44,8 @@ def extract_text_for_topic(pdf_path, page_ranges, max_chars=8000):
     if not page_ranges:
         return ""
     fitz = _get_fitz()
+    if fitz is None:
+        return ""
     doc = fitz.open(pdf_path)
     texts = []
     total = 0
