@@ -1,24 +1,24 @@
 import os
 import config
 
-# Lazy load fitz (PyMuPDF) to save memory at startup
-fitz = None
-fitz_available = True
+# Lazy load pypdf to save memory at startup
+PdfReader = None
+pypdf_available = True
 
 
-def _get_fitz():
-    global fitz, fitz_available
-    if not fitz_available:
+def _get_pdf_reader():
+    global PdfReader, pypdf_available
+    if not pypdf_available:
         return None
-    if fitz is None:
+    if PdfReader is None:
         try:
-            import fitz as _fitz
-            fitz = _fitz
+            from pypdf import PdfReader as _PdfReader
+            PdfReader = _PdfReader
         except ImportError as e:
-            print(f"Warning: PyMuPDF not available - PDF extraction disabled. Error: {e}")
-            fitz_available = False
+            print(f"Warning: pypdf not available - PDF extraction disabled. Error: {e}")
+            pypdf_available = False
             return None
-    return fitz
+    return PdfReader
 
 
 def parse_page_ranges(page_str):
@@ -43,23 +43,31 @@ def extract_text_for_topic(pdf_path, page_ranges, max_chars=8000):
     """Extract text from specified page ranges of a PDF."""
     if not page_ranges:
         return ""
-    fitz = _get_fitz()
-    if fitz is None:
+    PdfReader = _get_pdf_reader()
+    if PdfReader is None:
         return ""
-    doc = fitz.open(pdf_path)
-    texts = []
-    total = 0
-    for start, end in page_ranges:
-        for page_num in range(start - 1, min(end, len(doc))):
-            text = doc[page_num].get_text()
-            texts.append(f"--- Page {page_num + 1} ---\n{text}")
-            total += len(text)
+
+    try:
+        reader = PdfReader(pdf_path)
+        num_pages = len(reader.pages)
+        texts = []
+        total = 0
+
+        for start, end in page_ranges:
+            for page_num in range(start - 1, min(end, num_pages)):
+                page = reader.pages[page_num]
+                text = page.extract_text() or ""
+                texts.append(f"--- Page {page_num + 1} ---\n{text}")
+                total += len(text)
+                if total >= max_chars:
+                    break
             if total >= max_chars:
                 break
-        if total >= max_chars:
-            break
-    doc.close()
-    return '\n'.join(texts)[:max_chars]
+
+        return '\n'.join(texts)[:max_chars]
+    except Exception as e:
+        print(f"Error extracting PDF text: {e}")
+        return ""
 
 
 def get_topic_content(mapping):
