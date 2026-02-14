@@ -320,7 +320,7 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
     # Extract textbook content
     content = get_topic_content(dict(mapping) if mapping else None)
     if not content:
-        content = '** לא נמצאו קבצי PDF (Synopsis/Dulcan) או שאין מיפוי עמודים לנושא זה. צור שאלות על בסיס הידע הכללי שלך בנושא, וציין בהסבר: "מקור: ידע כללי (לא נמצא חומר מצורף)" **'
+        raise ValueError("לא נמצא תוכן מקבצי ה-PDF. אנא ודא שהקבצים הועלו ושיש מיפוי עמודים לנושא זה.")
 
     user_prompt = USER_PROMPT_TEMPLATE.format(
         count=count,
