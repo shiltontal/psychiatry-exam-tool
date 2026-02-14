@@ -1,3 +1,4 @@
+import os
 import fitz
 import config
 
@@ -40,13 +41,16 @@ def extract_text_for_topic(pdf_path, page_ranges, max_chars=8000):
 
 def get_topic_content(mapping):
     parts = []
-    if mapping and mapping['synopsis_pages']:
+
+    # Check if Synopsis PDF exists and extract content
+    if mapping and mapping['synopsis_pages'] and os.path.exists(config.SYNOPSIS_PATH):
         ranges = parse_page_ranges(mapping['synopsis_pages'])
         text = extract_text_for_topic(config.SYNOPSIS_PATH, ranges, max_chars=8000)
         if text:
             parts.append(f"From Synopsis of Psychiatry:\n{text}")
 
-    if mapping and mapping['dulcan_pages']:
+    # Check if Dulcan PDF exists and extract content
+    if mapping and mapping['dulcan_pages'] and os.path.exists(config.DULCAN_PATH):
         remaining = config.MAX_EXTRACT_CHARS - sum(len(p) for p in parts)
         if remaining > 2000:
             ranges = parse_page_ranges(mapping['dulcan_pages'])
@@ -55,3 +59,11 @@ def get_topic_content(mapping):
                 parts.append(f"From Dulcan's Textbook:\n{text}")
 
     return '\n\n'.join(parts) if parts else ''
+
+
+def check_files_status():
+    """Return status of uploaded PDF files."""
+    return {
+        'synopsis': os.path.exists(config.SYNOPSIS_PATH),
+        'dulcan': os.path.exists(config.DULCAN_PATH),
+    }

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}העלאת קבצים - כלי יצירת שאלות{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>העלאת ספרי לימוד</h2>
+        <p class="text-muted">העלו את קבצי ה-PDF של ספרי הלימוד כדי לאפשר יצירת שאלות מבוססת AI.</p>
+
+        <div class="alert alert-info">
+            <strong>שימו לב:</strong> קבצים שהועלו נשמרים בשרת. בתוכנית החינמית של Render, הקבצים יימחקו כאשר השרת מופעל מחדש.
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Synopsis -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Synopsis of Psychiatry</h5>
+            </div>
+            <div class="card-body">
+                {% if status.synopsis %}
+                <div class="alert alert-success">
+                    <strong>הקובץ הועלה</strong>
+                </div>
+                <form action="{{ url_for('uploads.delete_file', file_type='synopsis') }}" method="POST">
+                    <button type="submit" class="btn btn-danger btn-sm">מחק קובץ</button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <strong>לא הועלה קובץ</strong>
+                </div>
+                <form action="{{ url_for('uploads.upload_file') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="file_type" value="synopsis">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="file" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">העלה קובץ</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Dulcan -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Dulcan's Textbook</h5>
+            </div>
+            <div class="card-body">
+                {% if status.dulcan %}
+                <div class="alert alert-success">
+                    <strong>הקובץ הועלה</strong>
+                </div>
+                <form action="{{ url_for('uploads.delete_file', file_type='dulcan') }}" method="POST">
+                    <button type="submit" class="btn btn-danger btn-sm">מחק קובץ</button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <strong>לא הועלה קובץ</strong>
+                </div>
+                <form action="{{ url_for('uploads.upload_file') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="file_type" value="dulcan">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="file" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">העלה קובץ</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">הוראות</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>העלו את קובץ <strong>Synopsis of Psychiatry</strong> (PDF)</li>
+                    <li>העלו את קובץ <strong>Dulcan's Textbook</strong> (PDF)</li>
+                    <li>לאחר העלאת הקבצים, עברו ל<a href="/questions/generate">יצירת שאלות</a></li>
+                    <li>בחרו נושא מהסילבוס ולחצו "צור שאלות"</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

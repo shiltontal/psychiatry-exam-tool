@@ -23,11 +23,13 @@ def create_app():
     from app.routes.exams import bp as exams_bp
     from app.routes.export import bp as export_bp
     from app.routes.api import bp as api_bp
+    from app.routes.uploads import bp as uploads_bp
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(questions_bp, url_prefix='/questions')
     app.register_blueprint(exams_bp, url_prefix='/exams')
     app.register_blueprint(export_bp, url_prefix='/export')
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(uploads_bp)
 
     return app
