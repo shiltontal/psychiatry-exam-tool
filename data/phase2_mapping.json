@@ -902,6 +902,54 @@
       "dulcan_toc_pages": "1-69",
       "dulcan_toc_titles": "Ch 1: Clinical Assessment - Interpersonal aspects",
       "dulcan_confidence": "MEDIUM"
+    },
+    {
+      "id": 181,
+      "chapter": "L: General Topics",
+      "topic_he": "טריאז׳",
+      "topic_en": "Triage (initial information gathering and decision-making)",
+      "synopsis_toc_pages": "",
+      "synopsis_toc_titles": "",
+      "synopsis_confidence": "",
+      "dulcan_toc_pages": "1-41",
+      "dulcan_toc_titles": "Ch 1: Clinical Assessment - Triage and intake",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 182,
+      "chapter": "L: General Topics",
+      "topic_he": "אינטגרציה של מידע לפורמולציה",
+      "topic_en": "Information integration for formulation",
+      "synopsis_toc_pages": "",
+      "synopsis_toc_titles": "",
+      "synopsis_confidence": "",
+      "dulcan_toc_pages": "1-162",
+      "dulcan_toc_titles": "Part I: Clinical Assessment - Formulation",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 183,
+      "chapter": "L: General Topics",
+      "topic_he": "הכרת מבחנים פסיכודיאגנוסטיים ודידקטיים",
+      "topic_en": "Psychodiagnostic and psychoeducational test familiarity",
+      "synopsis_toc_pages": "",
+      "synopsis_toc_titles": "",
+      "synopsis_confidence": "",
+      "dulcan_toc_pages": "163-184; 187-226",
+      "dulcan_toc_titles": "Ch 6: Neuropsych Assessment; Ch 7: Intellectual Disability Assessment",
+      "dulcan_confidence": "HIGH"
+    },
+    {
+      "id": 184,
+      "chapter": "L: General Topics",
+      "topic_he": "מבחני קשב ממוחשבים",
+      "topic_en": "Computerized attention tests (TOVA, Conners CPT, MOXO)",
+      "synopsis_toc_pages": "",
+      "synopsis_toc_titles": "",
+      "synopsis_confidence": "",
+      "dulcan_toc_pages": "285-317; 1040-1087",
+      "dulcan_toc_titles": "Ch 10: ADHD; Ch 34: ADHD Medications (includes CPT discussion)",
+      "dulcan_confidence": "HIGH"
     }
   ],
   "total": 57
