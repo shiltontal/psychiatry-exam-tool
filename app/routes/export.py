@@ -1,12 +1,37 @@
 import io
-from flask import Blueprint, send_file
-from docx import Document
-from docx.shared import Pt, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
+from flask import Blueprint, send_file, flash, redirect, url_for
 from app.db import get_db
 
 bp = Blueprint('export', __name__)
+
+# Lazy load docx to avoid startup crashes if not installed
+_docx_loaded = False
+Document = None
+Pt = None
+Cm = None
+WD_ALIGN_PARAGRAPH = None
+qn = None
+
+
+def _load_docx():
+    global _docx_loaded, Document, Pt, Cm, WD_ALIGN_PARAGRAPH, qn
+    if _docx_loaded:
+        return True
+    try:
+        from docx import Document as _Document
+        from docx.shared import Pt as _Pt, Cm as _Cm
+        from docx.enum.text import WD_ALIGN_PARAGRAPH as _WD_ALIGN
+        from docx.oxml.ns import qn as _qn
+        Document = _Document
+        Pt = _Pt
+        Cm = _Cm
+        WD_ALIGN_PARAGRAPH = _WD_ALIGN
+        qn = _qn
+        _docx_loaded = True
+        return True
+    except ImportError as e:
+        print(f"Warning: python-docx not available: {e}")
+        return False
 
 
 def set_rtl_paragraph(paragraph):
@@ -25,6 +50,10 @@ def set_rtl_run(run, font_name='David', font_size=12):
 
 @bp.route('/exam/<int:exam_id>/docx')
 def export_docx(exam_id):
+    if not _load_docx():
+        flash('ייצוא Word לא זמין כרגע', 'error')
+        return redirect(url_for('exams.view', exam_id=exam_id))
+
     db = get_db()
     exam = db.execute("SELECT * FROM exams WHERE id=?", (exam_id,)).fetchone()
     questions = db.execute("""
