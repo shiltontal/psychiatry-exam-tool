@@ -138,4 +138,8 @@ def init_db(app):
     conn.executescript(SCHEMA)
     _migrate_db(conn)
     conn.close()
-    import_syllabus_data()
+    # Delay syllabus import - only import if database is empty
+    try:
+        import_syllabus_data()
+    except Exception as e:
+        print(f"Warning: Could not import syllabus data: {e}")

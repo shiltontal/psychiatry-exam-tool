@@ -1,6 +1,15 @@
 import os
-import fitz
 import config
+
+# Lazy load fitz (PyMuPDF) to save memory at startup
+fitz = None
+
+def _get_fitz():
+    global fitz
+    if fitz is None:
+        import fitz as _fitz
+        fitz = _fitz
+    return fitz
 
 
 def parse_page_ranges(page_str):
@@ -23,6 +32,7 @@ def parse_page_ranges(page_str):
 def extract_text_for_topic(pdf_path, page_ranges, max_chars=8000):
     if not page_ranges:
         return ""
+    fitz = _get_fitz()
     doc = fitz.open(pdf_path)
     texts = []
     total = 0
