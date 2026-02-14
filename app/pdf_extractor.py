@@ -77,6 +77,11 @@ def get_topic_content(mapping):
     """
     parts = []
 
+    # Debug logging
+    print(f"[PDF Extractor] Mapping: {mapping}")
+    print(f"[PDF Extractor] Synopsis path: {config.SYNOPSIS_PATH}, exists: {os.path.exists(config.SYNOPSIS_PATH)}")
+    print(f"[PDF Extractor] Dulcan path: {config.DULCAN_PATH}, exists: {os.path.exists(config.DULCAN_PATH)}")
+
     # Check if Synopsis PDF exists and extract content
     if mapping and mapping.get('synopsis_pages') and os.path.exists(config.SYNOPSIS_PATH):
         ranges = parse_page_ranges(mapping['synopsis_pages'])
@@ -93,7 +98,9 @@ def get_topic_content(mapping):
             if text:
                 parts.append(f"From Dulcan's Textbook:\n{text}")
 
-    return '\n\n'.join(parts) if parts else ''
+    result = '\n\n'.join(parts) if parts else ''
+    print(f"[PDF Extractor] Extracted {len(result)} chars from {len(parts)} sources")
+    return result
 
 
 def check_files_status():
