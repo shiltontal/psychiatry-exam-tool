@@ -88,29 +88,65 @@ def generate_form():
         "SELECT id, hebrew, english, parent_id FROM topics WHERE level=3 ORDER BY parent_id, id"
     ).fetchall()
 
-    return render_template('generate.html', chapters=chapters, topics=topics, subtopics=subtopics)
+    # Get question count per topic for coverage tracking
+    coverage = db.execute("""
+        SELECT topic_id, COUNT(*) as count
+        FROM questions
+        WHERE status != 'rejected'
+        GROUP BY topic_id
+    """).fetchall()
+    coverage_map = {row['topic_id']: row['count'] for row in coverage}
+
+    return render_template('generate.html', chapters=chapters, topics=topics,
+                           subtopics=subtopics, coverage=coverage_map)
 
 
 @bp.route('/generate', methods=['POST'])
 def generate_run():
     topic_id = int(request.form['topic_id'])
     count = int(request.form.get('count', 3))
-    difficulty = request.form.get('difficulty', 'medium')
     clinical_task = request.form.get('clinical_task', 'mixed')
     subtopic_ids = request.form.getlist('subtopic_ids', type=int) or None
+    language = request.form.get('language', 'he')
+    source = request.form.get('source', 'both')  # 'synopsis', 'dulcan', or 'both'
+
+    # Validate source parameter
+    if source not in ('synopsis', 'dulcan', 'both'):
+        source = 'both'
+
+    # Get per-question specs (arrays)
+    difficulties = request.form.getlist('difficulties[]')
+    bloom_levels = request.form.getlist('bloom_levels[]')
+    categories = request.form.getlist('categories[]')
+
+    # Build question_specs if arrays are provided
+    question_specs = None
+    if difficulties and len(difficulties) == count:
+        question_specs = []
+        for i in range(count):
+            question_specs.append({
+                'difficulty': difficulties[i] if i < len(difficulties) else 'medium',
+                'bloom_level': bloom_levels[i] if i < len(bloom_levels) else 'application',
+                'category': categories[i] if i < len(categories) else 'diagnosis',
+            })
+
+    # Fallback to global settings if no per-question specs
+    difficulty = request.form.get('difficulty', 'medium')
     bloom_level = request.form.get('bloom_level', 'application')
     category = request.form.get('category', 'diagnosis')
-    language = request.form.get('language', 'he')
 
     try:
         from app.ai_generator import generate_questions
         created_ids = generate_questions(
             topic_id, count, difficulty, clinical_task, subtopic_ids,
-            bloom_level=bloom_level, category=category, language=language
+            bloom_level=bloom_level, category=category, language=language,
+            question_specs=question_specs, source=source
         )
         success_msg = 'נוצרו {} שאלות חדשות בהצלחה!' if language == 'he' else 'تم إنشاء {} أسئلة جديدة بنجاح!'
         flash(success_msg.format(len(created_ids)), 'success')
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # Print full traceback to console
         flash(f'שגיאה ביצירת שאלות: {str(e)}', 'error')
         return redirect(url_for('questions.generate_form'))
 
@@ -138,10 +174,15 @@ def edit(qid):
 @bp.route('/<int:qid>', methods=['POST'])
 def update(qid):
     db = get_db()
+    # Handle source_page as integer or NULL
+    source_page = request.form.get('source_page', '')
+    source_page = int(source_page) if source_page and source_page.isdigit() else None
+
     db.execute("""
         UPDATE questions SET
             topic_id=?, stem_he=?, option_a=?, option_b=?, option_c=?, option_d=?, option_e=?,
             correct_answer=?, explanation_he=?, difficulty=?, bloom_level=?, status=?,
+            source_quote=?, source_book=?, source_page=?,
             updated_at=CURRENT_TIMESTAMP
         WHERE id=?
     """, (
@@ -157,6 +198,9 @@ def update(qid):
         request.form.get('difficulty', 'medium'),
         request.form.get('bloom_level', 'application'),
         request.form.get('status', 'draft'),
+        request.form.get('source_quote', ''),
+        request.form.get('source_book', ''),
+        source_page,
         qid
     ))
     db.commit()

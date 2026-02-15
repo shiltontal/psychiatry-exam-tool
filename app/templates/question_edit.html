@@ -74,7 +74,7 @@
                     <div class="mb-3">
                         <label class="form-label">רמת בלום</label>
                         <select class="form-select" name="bloom_level">
-                            {% for val, label in [('remember', 'זכירה'), ('understand', 'הבנה'), ('application', 'יישום'), ('analyze', 'ניתוח'), ('evaluate', 'הערכה')] %}
+                            {% for val, label in [('knowledge', 'זכירה'), ('comprehension', 'הבנה'), ('application', 'יישום'), ('analysis', 'ניתוח'), ('evaluation', 'הערכה'), ('synthesis', 'סינתזה')] %}
                             <option value="{{ val }}" {{ 'selected' if q.bloom_level == val else '' }}>{{ label }}</option>
                             {% endfor %}
                         </select>
@@ -87,6 +87,30 @@
                             <option value="{{ val }}" {{ 'selected' if q.status == val else '' }}>{{ label }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><strong>מקור מספר הלימוד</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">ציטוט מהמקור</label>
+                        <textarea class="form-control" name="source_quote" rows="3" dir="rtl" placeholder="הציטוט המדויק מהספר...">{{ q.source_quote or '' }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">ספר מקור</label>
+                            <select class="form-select" name="source_book">
+                                <option value="">-- בחר --</option>
+                                <option value="Synopsis" {{ 'selected' if q.source_book == 'Synopsis' else '' }}>Synopsis</option>
+                                <option value="Dulcan" {{ 'selected' if q.source_book == 'Dulcan' else '' }}>Dulcan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">עמוד</label>
+                            <input type="number" class="form-control" name="source_page" min="1" value="{{ q.source_page or '' }}" placeholder="מספר עמוד">
+                        </div>
                     </div>
                 </div>
             </div>

@@ -70,36 +70,48 @@ def extract_text_for_topic(pdf_path, page_ranges, max_chars=8000):
         return ""
 
 
-def get_topic_content(mapping):
+def get_topic_content(mapping, source='both'):
     """
     Extract relevant textbook content for a topic based on its page mappings.
-    Returns combined text from Synopsis and Dulcan textbooks.
+
+    Args:
+        mapping: Dictionary with page mappings (synopsis_pages, dulcan_pages)
+        source: Which source to use - 'synopsis', 'dulcan', or 'both' (default)
+
+    Returns:
+        Combined text from the selected textbook source(s).
     """
     parts = []
 
     # Debug logging
-    print(f"[PDF Extractor] Mapping: {mapping}")
+    print(f"[PDF Extractor] Mapping: {mapping}, Source filter: {source}")
     print(f"[PDF Extractor] Synopsis path: {config.SYNOPSIS_PATH}, exists: {os.path.exists(config.SYNOPSIS_PATH)}")
     print(f"[PDF Extractor] Dulcan path: {config.DULCAN_PATH}, exists: {os.path.exists(config.DULCAN_PATH)}")
 
     # Check if Synopsis PDF exists and extract content
-    if mapping and mapping.get('synopsis_pages') and os.path.exists(config.SYNOPSIS_PATH):
-        ranges = parse_page_ranges(mapping['synopsis_pages'])
-        text = extract_text_for_topic(config.SYNOPSIS_PATH, ranges, max_chars=8000)
-        if text:
-            parts.append(f"From Synopsis of Psychiatry:\n{text}")
+    if source in ('synopsis', 'both'):
+        if mapping and mapping.get('synopsis_pages') and os.path.exists(config.SYNOPSIS_PATH):
+            ranges = parse_page_ranges(mapping['synopsis_pages'])
+            # If only synopsis, allow more chars
+            max_chars = 12000 if source == 'synopsis' else 8000
+            text = extract_text_for_topic(config.SYNOPSIS_PATH, ranges, max_chars=max_chars)
+            if text:
+                parts.append(f"From Synopsis of Psychiatry:\n{text}")
 
     # Check if Dulcan PDF exists and extract content
-    if mapping and mapping.get('dulcan_pages') and os.path.exists(config.DULCAN_PATH):
-        remaining = config.MAX_EXTRACT_CHARS - sum(len(p) for p in parts)
-        if remaining > 2000:
-            ranges = parse_page_ranges(mapping['dulcan_pages'])
-            text = extract_text_for_topic(config.DULCAN_PATH, ranges, max_chars=min(7000, remaining))
-            if text:
-                parts.append(f"From Dulcan's Textbook:\n{text}")
+    if source in ('dulcan', 'both'):
+        if mapping and mapping.get('dulcan_pages') and os.path.exists(config.DULCAN_PATH):
+            remaining = config.MAX_EXTRACT_CHARS - sum(len(p) for p in parts)
+            # If only dulcan, allow more chars
+            max_chars = 12000 if source == 'dulcan' else min(7000, remaining)
+            if source == 'dulcan' or remaining > 2000:
+                ranges = parse_page_ranges(mapping['dulcan_pages'])
+                text = extract_text_for_topic(config.DULCAN_PATH, ranges, max_chars=max_chars)
+                if text:
+                    parts.append(f"From Dulcan's Textbook:\n{text}")
 
     result = '\n\n'.join(parts) if parts else ''
-    print(f"[PDF Extractor] Extracted {len(result)} chars from {len(parts)} sources")
+    print(f"[PDF Extractor] Extracted {len(result)} chars from {len(parts)} sources (filter: {source})")
     return result
 
 

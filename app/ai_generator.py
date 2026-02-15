@@ -163,6 +163,9 @@ SYSTEM_PROMPT_HE = """אתה מומחה בינלאומי מוביל בפסיכו
       "difficulty": "medium",
       "bloom_level": "application",
       "category": "diagnosis",
+      "source_quote": "הציטוט המדויק מילה במילה מהספר שעליו מבוססת התשובה הנכונה",
+      "source_book": "Synopsis",
+      "source_page": 123,
       "clinical_pearl": "טיפ קליני קצר וחשוב",
       "key_takeaway": "המסר המרכזי של השאלה",
       "patient_age": 8,
@@ -177,8 +180,11 @@ SYSTEM_PROMPT_HE = """אתה מומחה בינלאומי מוביל בפסיכו
 - correct: האות של התשובה הנכונה
 - explanation: הסבר מלא בפורמט למעלה
 - difficulty: easy/medium/hard
-- bloom_level: application/analysis/evaluation/synthesis
+- bloom_level: application/analysis/evaluation/synthesis (בהתאם למפרט שנתתי לך)
 - category: diagnosis/treatment/pharmacology/assessment/emergency/development
+- source_quote: ציטוט מילה במילה מהטקסט שעליו מבוססת השאלה (חובה!)
+- source_book: Synopsis או Dulcan (מאיפה הציטוט)
+- source_page: מספר העמוד (ראה "--- Page X ---" בחומר)
 - clinical_pearl: טיפ קליני
 - key_takeaway: מסר מרכזי
 - patient_age: גיל המטופל (0-18)
@@ -294,18 +300,20 @@ CLINICAL_TASK_MAP = {
 
 USER_PROMPT_TEMPLATE = """צור {count} שאלות MCQ ברמת מבחן הסמכה בנושא: {topic_he} ({topic_en})
 
-## הגדרות לשאלה זו:
+## מפרט לכל שאלה:
 
-**רמת קושי:**
-{difficulty}
+{question_specs}
 
-**רמת חשיבה (Bloom):**
-{bloom_instruction}
+---
 
-**קטגוריית שאלה:**
-{category_instruction}
+## דרישת גיוון — קריטי!
 
-**מטרת השאלה:** {clinical_task}
+כאשר יוצרים מספר שאלות, כל שאלה חייבת לכסות היבט שונה של הנושא:
+- אל תחזור על אותו מושג או עובדה
+- פזר בין: אבחנה, טיפול, פרמקולוגיה, פרוגנוזה, אטיולוגיה
+- השתמש בגילאים שונים (ילד, מתבגר, צעיר)
+- הצג תרחישים קליניים שונים
+- אם יש תת-נושאים — כסה תת-נושאים שונים בכל שאלה
 
 ---
 
@@ -324,14 +332,23 @@ USER_PROMPT_TEMPLATE = """צור {count} שאלות MCQ ברמת מבחן הסמ
 
 ## הנחיות קריטיות:
 
-1. **בסס כל שאלה אך ורק על החומר למעלה** — אל תמציא מידע
-2. **ציין מקור מדויק בהסבר** — שם ספר + מספר עמוד (ראה "--- Page X ---")
-3. **הסבר מפורט לכל תשובה שגויה** — מה הטעות, מתי זה כן נכון
-4. **כלול Clinical Pearl ו-Key Takeaway** בכל שאלה
-5. **גוון פורמטים** — רק 35% ויניטות! השאר: שאלות ישירות, תרחיש קצר, השוואה, מנגנון
-6. **ודא שאורך התשובות דומה** — אל תתן רמזים פסיכומטריים
+1. **בסס כל שאלה אך ורק על החומר למעלה** — אל תמציא מידע שלא קיים בטקסט!
+2. **ציטוט ישיר מהמקור** — כלול ציטוט מילה במילה מהטקסט (בגרשיים) בשדה source_quote
+3. **ציין מקור מדויק** — שם ספר (Synopsis/Dulcan) + מספר עמוד (ראה "--- Page X ---")
+4. **הסבר מפורט לכל תשובה שגויה** — מה הטעות, מתי זה כן נכון
+5. **כלול Clinical Pearl ו-Key Takeaway** בכל שאלה
+6. **גוון פורמטים** — רק 35% ויניטות! השאר: שאלות ישירות, תרחיש קצר, השוואה, מנגנון
+7. **ודא שאורך התשובות דומה** — אל תתן רמזים פסיכומטריים
+8. **אם אין מספיק מידע בחומר** — אל תיצור שאלה על הנושא, דלג לנושא אחר
+9. **ודא שכל שאלה בודקת מושג שונה** — אם יש תת-נושאים, פזר את השאלות ביניהם
 
 ## פורמט: החזר JSON בלבד, ללא backticks, ללא טקסט נוסף."""
+
+# Template for individual question spec
+QUESTION_SPEC_TEMPLATE_HE = """### שאלה {num}:
+- **רמת קושי:** {difficulty}
+- **רמת Bloom:** {bloom_instruction}
+- **קטגוריה:** {category_instruction}"""
 
 # ============================================================================
 # ARABIC SYSTEM PROMPT
@@ -486,6 +503,17 @@ USER_PROMPT_TEMPLATE_AR = """أنشئ {count} أسئلة MCQ بمستوى امت
 
 ---
 
+## متطلبات التنويع — حاسمة!
+
+عند إنشاء عدة أسئلة، يجب أن يغطي كل سؤال جانباً مختلفاً من الموضوع:
+- لا تكرر نفس المفهوم أو الحقيقة
+- وزّع بين: التشخيص، العلاج، علم الأدوية، التنبؤ، المسببات
+- استخدم أعماراً مختلفة (طفل، مراهق، شاب)
+- قدم سيناريوهات سريرية مختلفة
+- إذا كانت هناك مواضيع فرعية — غطِّ مواضيع فرعية مختلفة في كل سؤال
+
+---
+
 ## الموضوع ينتمي إلى الفصل: {chapter_en}
 
 ### المواضيع الفرعية المختارة:
@@ -507,6 +535,7 @@ USER_PROMPT_TEMPLATE_AR = """أنشئ {count} أسئلة MCQ بمستوى امت
 4. **شمل Clinical Pearl و Key Takeaway** في كل سؤال
 5. **نوّع التنسيقات** — 35% فقط حالات سريرية! البقية: أسئلة مباشرة، سيناريو قصير
 6. **تأكد من أن أطوال الإجابات متشابهة**
+7. **تأكد من أن كل سؤال يختبر مفهوماً مختلفاً** — إذا كانت هناك مواضيع فرعية، وزّع الأسئلة بينها
 
 ## التنسيق: أعد JSON فقط، بدون backticks، بدون نص إضافي."""
 
@@ -517,19 +546,23 @@ USER_PROMPT_TEMPLATE_AR = """أنشئ {count} أسئلة MCQ بمستوى امت
 
 def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mixed',
                        subtopic_ids=None, bloom_level='application', category='diagnosis',
-                       language='he'):
+                       language='he', question_specs=None, source='both'):
     """
     Generate high-quality MCQ questions based on textbook content.
 
     Args:
         topic_id: ID of the topic from the syllabus
         count: Number of questions to generate
-        difficulty: easy/medium/hard
+        difficulty: easy/medium/hard (used if question_specs not provided)
         clinical_task: Type of clinical task (legacy)
         subtopic_ids: Optional list of subtopic IDs to focus on
-        bloom_level: application/analysis/evaluation/synthesis
-        category: diagnosis/treatment/pharmacology/assessment/emergency/development
+        bloom_level: application/analysis/evaluation/synthesis (used if question_specs not provided)
+        category: diagnosis/treatment/pharmacology/assessment/emergency/development (used if question_specs not provided)
         language: 'he' for Hebrew, 'ar' for Arabic
+        question_specs: List of dicts with per-question specs, each containing:
+                       {difficulty, bloom_level, category}
+                       If provided, overrides the global difficulty/bloom_level/category
+        source: Which textbook source to use - 'synopsis', 'dulcan', or 'both' (default)
 
     Returns:
         List of created question IDs
@@ -572,14 +605,43 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
             "SELECT * FROM topic_mappings WHERE topic_id = ?", (topic['parent_id'],)
         ).fetchone()
 
-    # Extract textbook content
-    content = get_topic_content(dict(mapping) if mapping else None)
+    # Extract textbook content from selected source(s)
+    content = get_topic_content(dict(mapping) if mapping else None, source=source)
     if not content:
         raise ValueError(lang_config['no_content_error'])
+
+    # Build per-question specs if not provided
+    if not question_specs:
+        # Use global settings for all questions
+        question_specs = [
+            {'difficulty': difficulty, 'bloom_level': bloom_level, 'category': category}
+            for _ in range(count)
+        ]
+
+    # Build question specs string for Hebrew
+    def build_specs_he(specs):
+        specs_parts = []
+        for i, spec in enumerate(specs, 1):
+            diff = spec.get('difficulty', 'medium')
+            bloom = spec.get('bloom_level', 'application')
+            cat = spec.get('category', 'diagnosis')
+
+            diff_text = DIFFICULTY_MAP.get(diff, DIFFICULTY_MAP['medium'])
+            bloom_text = BLOOM_INSTRUCTIONS.get(bloom, BLOOM_INSTRUCTIONS['application'])
+            cat_text = CATEGORY_INSTRUCTIONS.get(cat, CATEGORY_INSTRUCTIONS['diagnosis'])
+
+            specs_parts.append(QUESTION_SPEC_TEMPLATE_HE.format(
+                num=i,
+                difficulty=diff_text,
+                bloom_instruction=bloom_text,
+                category_instruction=cat_text
+            ))
+        return '\n\n'.join(specs_parts)
 
     # Select prompts based on language
     if language == 'ar':
         system_prompt = SYSTEM_PROMPT_AR
+        # For Arabic, use global settings (TODO: add per-question support for Arabic)
         bloom_instruction = BLOOM_INSTRUCTIONS_AR.get(bloom_level, BLOOM_INSTRUCTIONS_AR['application'])
         category_instruction = CATEGORY_INSTRUCTIONS_AR.get(category, CATEGORY_INSTRUCTIONS_AR['diagnosis'])
         user_prompt = USER_PROMPT_TEMPLATE_AR.format(
@@ -594,16 +656,12 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
         )
     else:
         system_prompt = SYSTEM_PROMPT_HE
-        bloom_instruction = BLOOM_INSTRUCTIONS.get(bloom_level, BLOOM_INSTRUCTIONS['application'])
-        category_instruction = CATEGORY_INSTRUCTIONS.get(category, CATEGORY_INSTRUCTIONS['diagnosis'])
+        question_specs_text = build_specs_he(question_specs)
         user_prompt = USER_PROMPT_TEMPLATE.format(
             count=count,
             topic_he=topic['hebrew'],
             topic_en=topic['english'],
-            difficulty=DIFFICULTY_MAP.get(difficulty, DIFFICULTY_MAP['medium']),
-            bloom_instruction=bloom_instruction,
-            category_instruction=category_instruction,
-            clinical_task=CLINICAL_TASK_MAP.get(clinical_task, CLINICAL_TASK_MAP['mixed']),
+            question_specs=question_specs_text,
             chapter_he=topic['chapter_he'],
             subtopics_list=subtopics_text,
             content=content,
@@ -665,8 +723,9 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
 
         cursor = db.execute(
             "INSERT INTO questions (topic_id, stem_he, option_a, option_b, option_c, option_d, option_e, "
-            "correct_answer, explanation_he, difficulty, bloom_level, question_type, status, ai_generated, language) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?)",
+            "correct_answer, explanation_he, difficulty, bloom_level, question_type, status, ai_generated, language, "
+            "source_quote, source_book, source_page) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)",
             (topic_id, q.get('stem', ''),
              opts.get('A', ''), opts.get('B', ''), opts.get('C', ''), opts.get('D', ''),
              opts.get('E', ''), q.get('correct', 'A'),
@@ -674,7 +733,10 @@ def generate_questions(topic_id, count=3, difficulty='medium', clinical_task='mi
              q.get('difficulty', difficulty),
              q.get('bloom_level', bloom_level),
              q.get('category', category),
-             language)
+             language,
+             q.get('source_quote', ''),
+             q.get('source_book', ''),
+             q.get('source_page'))
         )
         created.append(cursor.lastrowid)
 

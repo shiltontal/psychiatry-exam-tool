@@ -47,9 +47,13 @@ CREATE TABLE IF NOT EXISTS questions (
     question_type TEXT DEFAULT '',
     status TEXT DEFAULT 'draft',
     source_info TEXT DEFAULT '',
+    source_quote TEXT DEFAULT '',
+    source_book TEXT DEFAULT '',
+    source_page INTEGER DEFAULT NULL,
     ai_generated INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    language TEXT DEFAULT 'he',
     FOREIGN KEY (topic_id) REFERENCES topics(id)
 );
 
@@ -132,6 +136,15 @@ def _migrate_db(conn):
         conn.commit()
     if 'language' not in columns:
         conn.execute("ALTER TABLE questions ADD COLUMN language TEXT DEFAULT 'he'")
+        conn.commit()
+    if 'source_quote' not in columns:
+        conn.execute("ALTER TABLE questions ADD COLUMN source_quote TEXT DEFAULT ''")
+        conn.commit()
+    if 'source_book' not in columns:
+        conn.execute("ALTER TABLE questions ADD COLUMN source_book TEXT DEFAULT ''")
+        conn.commit()
+    if 'source_page' not in columns:
+        conn.execute("ALTER TABLE questions ADD COLUMN source_page INTEGER DEFAULT NULL")
         conn.commit()
 
 

@@ -32,7 +32,7 @@ def main():
     # Open browser after delay
     threading.Timer(1.5, lambda: webbrowser.open(f'http://localhost:{port}')).start()
 
-    app.run(host='127.0.0.1', port=port, debug=False)
+    app.run(host='127.0.0.1', port=port, debug=True)
 
 
 if __name__ == '__main__':
